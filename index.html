@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6e8c9">
+  <meta name="description" content="Le Secret Santa artisanal de la bande !">
+  <title>Le grand tirage de Noël 🎄</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="paper">
+    <header class="masthead">
+      <span class="star star-left" aria-hidden="true">✷</span>
+      <p class="handwritten">édition spéciale de la bande</p>
+      <h1>Le grand<br><span>tirage de Noël</span></h1>
+      <p class="intro">Sept lutins, sept cadeaux, et surtout… pas de cadeau à son amoureux·se !</p>
+      <span class="star star-right" aria-hidden="true">✷</span>
+    </header>
+
+    <section id="drawSection" class="draw-section">
+      <div class="tape">ORGANISATION SECRÈTE</div>
+      <h2>Pour la personne qui organise</h2>
+      <p>Prépare les 7 liens personnalisés, puis envoie à chacun·e son lien <strong>en privé</strong>. Le lien ne révèle que son destinataire.</p>
+      <button id="drawButton" class="button" type="button">🎲 Faire le tirage & préparer les liens</button>
+      <p class="smallprint">Le tirage est sauvegardé dans ce navigateur. Ne partage pas la liste des liens en groupe !</p>
+      <div id="linksPanel" class="links-panel" hidden>
+        <h3>Les petits mots à envoyer ✉️</h3>
+        <p class="smallprint">Copie chaque lien et envoie-le à la bonne personne. Si tu refais le tirage, les anciens liens ne fonctionneront plus.</p>
+        <ul id="linksList" class="links-list"></ul>
+        <button id="copyAllButton" class="button button-secondary" type="button">Copier tous les liens</button>
+      </div>
+    </section>
+
+    <section id="revealSection" class="reveal-section" hidden aria-live="polite">
+      <div class="ornament" aria-hidden="true">🎁</div>
+      <p class="handwritten">Pssst… c’est ton secret !</p>
+      <h2 id="revealHeading">Ton destin de Noël</h2>
+      <p class="reveal-label">Tu offres un cadeau à…</p>
+      <p id="recipient" class="recipient"></p>
+      <p class="smallprint">Chut ! Garde le secret jusqu’au grand déballage 🤫</p>
+    </section>
+
+    <footer>Fait avec amour, des ciseaux qui coupent mal et un peu de magie ✂️✨</footer>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>

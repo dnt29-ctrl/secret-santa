@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Playfair+Display:wght@700;800&display=swap');
+
+:root { --ink:#382d28; --red:#b6403e; --green:#456b4c; --cream:#fffaf0; --pink:#f5d8d1; --yellow:#f6d578; }
+* { box-sizing:border-box; }
+body { margin:0; min-height:100vh; padding:28px 14px; color:var(--ink); background-color:#f1dfbd; background-image:radial-gradient(#d5bd91 0.8px,transparent 0.8px); background-size:12px 12px; font-family:'Patrick Hand','Trebuchet MS',sans-serif; font-size:20px; }
+.paper { max-width:720px; margin:0 auto; padding:30px clamp(18px,5vw,52px) 25px; background:var(--cream); border:2px solid #634a3c; box-shadow:7px 8px 0 #896747; transform:rotate(-.35deg); position:relative; }
+.paper:before { content:''; position:absolute; inset:8px; border:1px dashed #c3a887; pointer-events:none; }
+.masthead { position:relative; text-align:center; padding:8px 15px 25px; border-bottom:2px dashed #c6ad8d; }
+.handwritten { margin:0; color:var(--green); font-size:22px; }
+h1 { margin:8px 0 10px; color:var(--red); font-family:'Playfair Display',Georgia,serif; font-size:clamp(42px,9vw,72px); line-height:.97; text-shadow:2px 2px 0 #f3d9ac; }
+h1 span { color:var(--green); }
+.intro { max-width:490px; margin:15px auto 0; font-size:21px; }
+.star { position:absolute; top:40px; color:#e4aa35; font-size:42px; }
+.star-left { left:0; transform:rotate(-15deg); }.star-right { right:0; transform:rotate(15deg); }
+.draw-section,.reveal-section { position:relative; margin:27px 0; padding:27px clamp(14px,4vw,32px); text-align:center; background:#fff4dc; border:2px solid #6f5444; border-radius:4px 12px 5px 14px; box-shadow:3px 4px 0 #d9c29d; }
+.draw-section:after { content:'❄'; position:absolute; right:13px; top:10px; color:#80a99a; font-size:25px; }
+.tape { position:absolute; top:-14px; left:50%; transform:translateX(-50%) rotate(-2deg); padding:3px 14px; background:var(--yellow); color:#72532b; font-size:15px; letter-spacing:2px; }
+h2 { color:var(--green); font-size:29px; margin:5px 0 10px; }
+p { line-height:1.35; }
+.button { display:inline-block; padding:12px 19px; margin:8px 0; border:2px solid #653d34; border-radius:4px 12px 5px 9px; color:white; background:var(--red); box-shadow:3px 4px 0 #7b302e; font:22px 'Patrick Hand',sans-serif; cursor:pointer; }
+.button:hover { transform:translateY(-2px) rotate(-.5deg); }.button:active { transform:translateY(2px); box-shadow:1px 2px 0 #7b302e; }
+.button-secondary { background:var(--green); box-shadow:3px 4px 0 #2f5037; }
+.smallprint { color:#705c4c; font-size:17px; }
+.links-panel { margin-top:24px; padding-top:16px; border-top:2px dashed #c6ad8d; }
+.links-panel h3 { color:var(--red); font-size:26px; margin:0; }
+.links-list { list-style:none; margin:15px 0; padding:0; text-align:left; }
+.links-list li { display:grid; grid-template-columns:100px minmax(0,1fr) auto; align-items:center; gap:9px; padding:10px 0; border-bottom:1px dotted #bca58b; }
+.links-list label { color:var(--green); font-weight:bold; }
+.links-list input { width:100%; min-width:0; padding:8px; border:1px solid #bca58b; background:#fffdf8; font:13px monospace; }
+.copy-one { padding:7px 10px; border:1px solid #684b3e; border-radius:5px; background:var(--pink); color:var(--ink); font:17px 'Patrick Hand',sans-serif; cursor:pointer; }
+.reveal-section { background:#f7e6e1; border-radius:18px 5px 15px 6px; }
+.ornament { font-size:52px; }
+.reveal-label { margin:15px 0 0; color:#705c4c; }
+.recipient { margin:0; color:var(--red); font-family:'Playfair Display',Georgia,serif; font-size:clamp(36px,8vw,56px); font-weight:800; }
+footer { padding:8px 0 0; text-align:center; color:var(--green); font-size:18px; }
+[hidden] { display:none !important; }
+@media(max-width:520px) { body{padding:14px 9px}.paper{padding:23px 15px 18px}.star{top:48px;font-size:30px}.links-list li{grid-template-columns:1fr auto}.links-list input{grid-column:1/-1;grid-row:2}.copy-one{grid-column:2;grid-row:1} }
