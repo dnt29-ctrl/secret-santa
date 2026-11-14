@@ -19,11 +19,18 @@
     </header>
 
     <section id="drawSection" class="draw-section">
-      <div class="tape">ORGANISATION SECRÈTE</div>
-      <h2>Pour la personne qui organise</h2>
-      <p>Prépare les 7 liens personnalisés, puis envoie à chacun·e son lien <strong>en privé</strong>. Le lien ne révèle que son destinataire.</p>
-      <button id="drawButton" class="button" type="button">🎲 Faire le tirage & préparer les liens</button>
-      <p class="smallprint">Le tirage est sauvegardé dans ce navigateur. Ne partage pas la liste des liens en groupe !</p>
+      <div class="tape">COIN DE L’ORGANISATION</div>
+      <h2>Les petits mots à envoyer ✉️</h2>
+      <p>Prépare les liens personnalisés, puis envoie à chacun·e le sien <strong>en privé</strong>. Chaque lien ne révèle que son destinataire.</p>
+      <button id="drawButton" class="button" type="button">🎲 Faire le tirage &amp; préparer les liens</button>
+      <p class="smallprint">Le tirage est gardé dans le stockage de ce navigateur. Garde ton lien admin précieusement et ne partage pas les liens en groupe !</p>
+      <div class="admin-link-box">
+        <label for="adminLink">Ton lien admin à garder pour plus tard</label>
+        <div class="admin-link-row">
+          <input id="adminLink" type="text" readonly aria-label="Lien admin">
+          <button id="copyAdminButton" class="copy-one" type="button">Copier</button>
+        </div>
+      </div>
       <div id="linksPanel" class="links-panel" hidden>
         <h3>Les petits mots à envoyer ✉️</h3>
         <p class="smallprint">Copie chaque lien et envoie-le à la bonne personne. Si tu refais le tirage, les anciens liens ne fonctionneront plus.</p>
@@ -36,9 +43,14 @@
       <div class="ornament" aria-hidden="true">🎁</div>
       <p class="handwritten">Pssst… c’est ton secret !</p>
       <h2 id="revealHeading">Ton destin de Noël</h2>
-      <p class="reveal-label">Tu offres un cadeau à…</p>
-      <p id="recipient" class="recipient"></p>
-      <p class="smallprint">Chut ! Garde le secret jusqu’au grand déballage 🤫</p>
+      <p class="reveal-label">Quand tu es prêt·e, ouvre ton petit mot…</p>
+      <button id="revealButton" class="button reveal-button" type="button">✨ Révéler mon Secret Santa ✨</button>
+      <div id="revealResult" class="reveal-result" hidden>
+        <p class="reveal-label">Tu offres un cadeau à…</p>
+        <p id="recipient" class="recipient"></p>
+        <p class="smallprint">Chut ! Garde le secret jusqu’au grand déballage 🤫</p>
+      </div>
+      <div id="confetti" class="confetti" aria-hidden="true"></div>
     </section>
 
     <footer>Fait avec amour, des ciseaux qui coupent mal et un peu de magie ✂️✨</footer>

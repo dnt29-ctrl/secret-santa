@@ -1,11 +1,17 @@
-const people = ['Jade', 'Carla', 'Tristan', 'Eflamm', 'Samia', 'Meven', 'Camille'];
-const couples = { Jade: 'Carla', Carla: 'Jade', Tristan: 'Eflamm', Eflamm: 'Tristan', Samia: 'Meven', Meven: 'Samia' };
+const people = ['Jade', 'Carla', 'Samia', 'Meven', 'Tristan', 'Eflamm', 'Camille'];
+const couples = {
+  Jade: 'Carla', Carla: 'Jade',
+  Tristan: 'Eflamm', Eflamm: 'Tristan',
+  Samia: 'Meven', Meven: 'Samia'
+};
 const STORAGE_KEY = 'secret-santa-2026-v1';
+const ADMIN_KEY = 'secret-santa-admin-link-v1';
 const params = new URLSearchParams(location.search);
 const encryptedGift = params.get('gift');
 const drawButton = document.getElementById('drawButton');
 const linksPanel = document.getElementById('linksPanel');
 const linksList = document.getElementById('linksList');
+const copyAllButton = document.getElementById('copyAllButton');
 
 function shuffled(items) {
   const result = [...items];
@@ -34,13 +40,22 @@ function makeDraw() {
   return place(0) ? assignments : null;
 }
 
+function isValidDraw(draw) {
+  if (!draw || typeof draw !== 'object') return false;
+  const receivers = people.map((giver) => draw[giver]);
+  return people.every((giver) => people.includes(draw[giver]) && draw[giver] !== giver && draw[giver] !== couples[giver])
+    && new Set(receivers).size === people.length;
+}
+
 function toBase64Url(bytes) {
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
+
 function fromBase64Url(value) {
-  const binary = atob(value.replace(/-/g, '+').replace(/_/g, '/'));
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const binary = atob(normalized + '='.repeat((4 - normalized.length % 4) % 4));
   return Uint8Array.from(binary, (char) => char.charCodeAt(0));
 }
 
@@ -54,75 +69,137 @@ async function createPersonalLink(giver, receiver) {
   payload.set(iv);
   payload.set(new Uint8Array(ciphertext), iv.length);
   const url = new URL(location.href);
-  url.search = `?gift=${toBase64Url(payload)}`;
+  url.search = '';
+  url.hash = '';
+  url.searchParams.set('gift', toBase64Url(payload));
   url.hash = toBase64Url(keyBytes);
   return url.href;
 }
 
-function renderLinks(draw) {
+async function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const temporary = document.createElement('textarea');
+  temporary.value = text;
+  temporary.style.position = 'fixed';
+  temporary.style.opacity = '0';
+  document.body.append(temporary);
+  temporary.select();
+  const copied = document.execCommand('copy');
+  temporary.remove();
+  if (!copied) throw new Error('La copie a échoué');
+}
+
+function setTemporaryLabel(button, label, original) {
+  button.textContent = label;
+  window.setTimeout(() => { button.textContent = original; }, 1500);
+}
+
+async function renderLinks(draw) {
   linksList.replaceChildren();
-  for (const giver of people) {
+  const entries = await Promise.all(people.map(async (giver) => [giver, await createPersonalLink(giver, draw[giver])]));
+  for (const [giver, link] of entries) {
     const li = document.createElement('li');
     const label = document.createElement('label');
     label.textContent = giver;
     const input = document.createElement('input');
     input.readOnly = true;
-    input.value = draw[giver];
-    input.setAttribute('aria-label', `Destinataire de ${giver} — ne pas partager`);
+    input.value = link;
+    input.setAttribute('aria-label', `Lien secret de ${giver} — ne partager qu'avec cette personne`);
     const button = document.createElement('button');
     button.className = 'copy-one';
     button.type = 'button';
     button.textContent = 'Copier le lien';
     button.addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(input.dataset.link); button.textContent = 'Copié !'; }
-      catch { input.focus(); input.select(); document.execCommand('copy'); button.textContent = 'Copié !'; }
-      setTimeout(() => { button.textContent = 'Copier le lien'; }, 1400);
+      try {
+        await copyText(link);
+        setTemporaryLabel(button, 'Copié !', 'Copier le lien');
+      } catch {
+        input.focus();
+        input.select();
+        setTemporaryLabel(button, 'Sélectionné !', 'Copier le lien');
+      }
     });
     li.append(label, input, button);
     linksList.append(li);
-    createPersonalLink(giver, draw[giver]).then((link) => { input.dataset.link = link; input.value = link; });
   }
   linksPanel.hidden = false;
 }
 
-async function reveal() {
-  try {
-    const keyBytes = fromBase64Url(location.hash.slice(1));
-    const payload = fromBase64Url(encryptedGift);
-    if (keyBytes.length !== 32 || payload.length < 29) throw new Error('Lien incomplet');
-    const key = await crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['decrypt']);
-    const iv = payload.slice(0, 12);
-    const ciphertext = payload.slice(12);
-    const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
-    const { giver, receiver } = JSON.parse(new TextDecoder().decode(plaintext));
-    if (!people.includes(giver) || !people.includes(receiver) || giver === receiver || couples[giver] === receiver) throw new Error('Tirage invalide');
-    document.getElementById('drawSection').hidden = true;
-    document.getElementById('revealSection').hidden = false;
-    document.getElementById('revealHeading').textContent = `Pour ${giver}`;
-    document.getElementById('recipient').textContent = receiver;
-  } catch {
-    document.getElementById('drawSection').hidden = true;
-    const section = document.getElementById('revealSection');
-    section.hidden = false;
-    section.querySelector('.handwritten').textContent = 'Oh non, le petit mot est illisible !';
-    document.getElementById('revealHeading').textContent = 'Lien invalide ou incomplet';
-    document.getElementById('recipient').textContent = 'Demande un nouveau lien à la personne qui organise.';
-  }
+function showInvalidLink() {
+  document.getElementById('drawSection').hidden = true;
+  const section = document.getElementById('revealSection');
+  section.hidden = false;
+  section.querySelector('.handwritten').textContent = 'Oh non, le petit mot est illisible !';
+  document.getElementById('revealHeading').textContent = 'Lien invalide ou incomplet';
+  document.querySelector('.reveal-label').textContent = 'Demande un nouveau lien à la personne qui organise.';
+  document.getElementById('revealButton').hidden = true;
 }
 
 async function prepareDraw(force = false) {
   let draw;
   try { draw = !force && JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { draw = null; }
-  if (!draw || people.some((person) => !people.includes(draw[person]))) {
+  if (!isValidDraw(draw)) {
     draw = makeDraw();
-    if (!draw) { alert('Impossible de faire un tirage avec ces contraintes.'); return; }
+    if (!draw) {
+      alert('Impossible de faire un tirage avec ces contraintes.');
+      return;
+    }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(draw));
   }
-  renderLinks(draw);
+  await renderLinks(draw);
+}
+
+async function reveal() {
+  document.getElementById('drawSection').hidden = true;
+  const section = document.getElementById('revealSection');
+  section.hidden = false;
+  try {
+    const keyBytes = fromBase64Url(location.hash.slice(1));
+    const payload = fromBase64Url(encryptedGift);
+    if (keyBytes.length !== 32 || payload.length < 29) throw new Error('Lien incomplet');
+    const key = await crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['decrypt']);
+    const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: payload.slice(0, 12) }, key, payload.slice(12));
+    const { giver, receiver } = JSON.parse(new TextDecoder().decode(plaintext));
+    if (!people.includes(giver) || !people.includes(receiver) || giver === receiver || couples[giver] === receiver) throw new Error('Tirage invalide');
+    document.getElementById('revealHeading').textContent = `Pour ${giver}`;
+    document.getElementById('revealButton').addEventListener('click', () => {
+      const button = document.getElementById('revealButton');
+      button.disabled = true;
+      button.textContent = '✨ La magie opère… ✨';
+      section.classList.add('is-revealing');
+      window.setTimeout(() => {
+        document.getElementById('recipient').textContent = receiver;
+        document.getElementById('revealResult').hidden = false;
+        button.hidden = true;
+        section.classList.remove('is-revealing');
+        section.classList.add('revealed');
+      }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 50 : 1350);
+    }, { once: true });
+  } catch {
+    showInvalidLink();
+  }
+}
+
+function setupAdminLink() {
+  let token = localStorage.getItem(ADMIN_KEY);
+  if (!token) {
+    token = toBase64Url(crypto.getRandomValues(new Uint8Array(24)));
+    localStorage.setItem(ADMIN_KEY, token);
+  }
+  const url = new URL(location.href);
+  url.search = '';
+  url.hash = '';
+  url.searchParams.set('admin', token);
+  document.getElementById('adminLink').value = url.href;
 }
 
 drawButton.addEventListener('click', async () => {
-  if (localStorage.getItem(STORAGE_KEY) && !confirm('Un tirage existe déjà dans ce navigateur. En refaire un rendra les anciens liens inutilisables. Continuer ?')) return;
+  let existing = null;
+  try { existing = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { /* Start a fresh draw if storage is damaged. */ }
+  if (isValidDraw(existing) && !confirm('Un tirage existe déjà. En refaire un rendra les anciens liens inutilisables. Continuer ?')) return;
   drawButton.disabled = true;
   drawButton.textContent = 'Préparation des petits mots…';
   try {
@@ -130,20 +207,35 @@ drawButton.addEventListener('click', async () => {
     await prepareDraw(true);
   } finally {
     drawButton.disabled = false;
-    drawButton.textContent = '🎲 Faire le tirage & préparer les liens';
+    drawButton.textContent = '🎲 Refaire le tirage & préparer les liens';
   }
 });
 
-document.getElementById('copyAllButton').addEventListener('click', async () => {
-  const lines = [...linksList.querySelectorAll('li')].map((li) => `${li.querySelector('label').textContent} : ${li.querySelector('input').dataset.link}`);
-  if (lines.some((line) => line.endsWith(': undefined'))) return;
+document.getElementById('copyAdminButton').addEventListener('click', async (event) => {
+  const button = event.currentTarget;
   try {
-    await navigator.clipboard.writeText(lines.join('\n'));
-    const button = document.getElementById('copyAllButton');
-    button.textContent = 'Tout est copié !';
-    setTimeout(() => { button.textContent = 'Copier tous les liens'; }, 1500);
-  } catch { alert('La copie automatique a échoué. Copie les liens un par un.'); }
+    await copyText(document.getElementById('adminLink').value);
+    setTemporaryLabel(button, 'Copié !', 'Copier');
+  } catch {
+    document.getElementById('adminLink').focus();
+    document.getElementById('adminLink').select();
+    setTemporaryLabel(button, 'Sélectionné !', 'Copier');
+  }
 });
 
-if (encryptedGift) reveal();
-else prepareDraw();
+copyAllButton.addEventListener('click', async () => {
+  const lines = [...linksList.querySelectorAll('li')].map((li) => `${li.querySelector('label').textContent} : ${li.querySelector('input').value}`);
+  try {
+    await copyText(lines.join('\n'));
+    setTemporaryLabel(copyAllButton, 'Tout est copié !', 'Copier tous les liens');
+  } catch {
+    alert('La copie automatique a échoué. Copie les liens un par un.');
+  }
+});
+
+if (encryptedGift) {
+  reveal();
+} else {
+  setupAdminLink();
+  prepareDraw();
+}
